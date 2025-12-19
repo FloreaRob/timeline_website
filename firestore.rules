@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can read (for guest mode)
+    match /{document=**} {
+      allow read: if true;
+    }
+
+    // Albums collection rules
+    match /albums/{albumId} {
+      // Anyone can read
+      allow read: if true;
+
+      // Only authenticated users can create albums
+      allow create: if request.auth != null;
+
+      // Only the user who created the album can update or delete it
+      allow update, delete: if request.auth != null
+                           && request.auth.uid == resource.data.addedBy;
+    }
+
+    // Comments collection rules
+    match /comments/{commentId} {
+      // Anyone can read
+      allow read: if true;
+
+      // Only authenticated users can create comments
+      // And they must set their own userId
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+
+      // Only the comment owner can update or delete
+      allow update, delete: if request.auth != null
+                            && request.auth.uid == resource.data.userId;
+    }
+  }
+}

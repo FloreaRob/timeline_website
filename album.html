@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Album Details - Music Timeline</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/album.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <a href="timeline.html" class="btn btn-ghost back-btn">
+        ← Back to Timeline
+      </a>
+    </div>
+
+    <div class="header-actions">
+      <div id="userInfo" class="user-info" style="display: none;">
+        <span>👤 <span id="userName"></span></span>
+      </div>
+      <button id="logoutButton" class="btn btn-ghost">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="album-page">
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading album...</p>
+    </div>
+
+    <!-- Album Content (hidden until loaded) -->
+    <div id="albumContent" class="album-content hidden">
+
+      <!-- Album Header -->
+      <section class="album-header">
+        <div class="album-cover-large">
+          <img id="albumCover" src="" alt="Album cover">
+          <div id="albumTypeBadge" class="type-badge"></div>
+        </div>
+
+        <div class="album-info">
+          <h1 id="albumTitle" class="album-title"></h1>
+          <p id="albumDate" class="album-date"></p>
+          <p id="albumStats" class="album-stats"></p>
+
+          <!-- Delete Album Button (only for album owner) -->
+          <div id="deleteAlbumSection" class="write-control" style="display: none; margin-top: var(--space-lg);">
+            <button id="deleteAlbumBtn" class="btn btn-danger btn-sm">
+              🗑️ Delete This Album
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guest Banner (shown if not logged in) -->
+      <div id="guestCommentBanner" class="guest-comment-banner hidden">
+        <p>👁️ You're viewing in read-only mode. <a href="index.html">Log in</a> to add your rating and comments.</p>
+      </div>
+
+      <!-- Comments Section -->
+      <section class="comments-section">
+        <h2 class="section-title">Ratings & Comments</h2>
+
+        <!-- Current User's Comment (if logged in and exists) -->
+        <div id="currentUserComment" class="write-control hidden">
+          <div class="comment-card current-user-card">
+            <div class="comment-header">
+              <h3>Your Comment</h3>
+              <button id="editCommentBtn" class="btn btn-ghost btn-sm">Edit</button>
+            </div>
+            <div id="currentCommentView" class="comment-view"></div>
+            <div id="currentCommentEdit" class="comment-edit hidden">
+              <form id="commentForm">
+                <div class="form-group">
+                  <label class="form-label">Rating (1-10)</label>
+                  <div id="ratingInput" class="rating-input"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="commentText" class="form-label">Your Thoughts</label>
+                  <textarea
+                    id="commentText"
+                    name="comment"
+                    rows="5"
+                    placeholder="Share your thoughts about this album/song..."
+                  ></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="saveCommentBtn">
+                    Save Comment
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                    Cancel
+                  </button>
+                  <button type="button" class="btn btn-danger" id="deleteCommentBtn">
+                    Delete
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Comment Button (if user hasn't commented yet) -->
+        <div id="addCommentSection" class="write-control hidden">
+          <button id="showAddCommentBtn" class="btn btn-primary">
+            + Add Your Rating & Comment
+          </button>
+
+          <div id="addCommentForm" class="comment-card hidden">
+            <h3>Add Your Comment</h3>
+            <form id="newCommentForm">
+              <div class="form-group">
+                <label class="form-label">Rating (1-10)</label>
+                <div id="newRatingInput" class="rating-input"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="newCommentText" class="form-label">Your Thoughts</label>
+                <textarea
+                  id="newCommentText"
+                  name="comment"
+                  rows="5"
+                  placeholder="Share your thoughts about this album/song..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  Post Comment
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelAddBtn">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Other Users' Comments -->
+        <div id="otherComments" class="other-comments">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- No Comments State -->
+        <div id="noComments" class="no-comments hidden">
+          <p class="text-muted">No comments yet. Be the first to share your thoughts!</p>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/album.js"></script>
+
+</body>
+</html>

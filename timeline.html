@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Timeline</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/timeline.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">🎵 Music Timeline</h1>
+
+    <div class="header-actions">
+      <!-- Add Album Button (hidden for guests) -->
+      <a href="admin.html" id="addAlbumButton" class="btn btn-primary write-control" style="display: none;">
+        + Add Album
+      </a>
+
+      <!-- User Info (hidden for guests) -->
+      <div id="userInfo" class="user-info" style="display: none;">
+        <span>👤 <span id="userName"></span></span>
+      </div>
+
+      <!-- Logout Button -->
+      <button id="logoutButton" class="btn btn-ghost">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Guest Mode Banner -->
+  <div id="guestBanner" class="guest-banner hidden">
+    <p>👁️ You're in <strong>read-only mode</strong>. Log in to add albums and comments.</p>
+  </div>
+
+  <!-- Timeline Container -->
+  <div class="timeline-wrapper">
+    <div class="timeline-container" id="timelineContainer">
+      <!-- Timeline Canvas (dynamically generated) -->
+      <div class="timeline-canvas" id="timelineCanvas">
+        <!-- Year markers and album markers will be added here by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Timeline Controls -->
+    <div class="timeline-controls">
+      <button class="timeline-control-btn" id="jumpToTodayBtn" title="Jump to current date">
+        📍 Today
+      </button>
+      <button class="timeline-control-btn" id="zoomOutBtn" title="Show more years (coming soon)" disabled>
+        🔍 Zoom
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loadingState" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading timeline...</p>
+  </div>
+
+  <!-- Empty State (shown when no albums) -->
+  <div id="emptyState" class="empty-state hidden">
+    <div class="empty-state-icon">🎵</div>
+    <h2>No albums yet</h2>
+    <p>Start building your musical journey by adding your first album!</p>
+    <a href="admin.html" class="btn btn-primary write-control">+ Add Your First Album</a>
+  </div>
+
+  <!-- Album Hover Preview (tooltip) -->
+  <div id="albumPreview" class="album-preview hidden">
+    <img id="previewImage" src="" alt="">
+    <div class="preview-info">
+      <h3 id="previewTitle"></h3>
+      <p id="previewDate"></p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/timeline.js"></script>
+
+</body>
+</html>

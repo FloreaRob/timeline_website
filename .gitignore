@@ -1,0 +1,23 @@
+# Firebase config (contains API keys - safe for frontend, but good practice)
+# You'll create this file locally based on firebase-config.template.js
+js/firebase-config.js
+
+# Firebase cache
+.firebase/
+.firebaserc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Optional: if you add build tools later
+node_modules/
+dist/
+build/
