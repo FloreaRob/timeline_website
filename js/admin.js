@@ -80,14 +80,14 @@ async function handleFormSubmit(event) {
   const imageUrl = document.getElementById('imageUrl').value.trim();
   const currentUser = firebase.auth().currentUser;
 
-  // Validate
-  if (!title || !type || !month || !year || !imageUrl) {
+  // Validate required fields
+  if (!title || !type || !month || !year) {
     showToast('Please fill in all required fields', 'error');
     return;
   }
 
-  // Validate image URL
-  if (!isValidUrl(imageUrl)) {
+  // Validate image URL only if provided
+  if (imageUrl && !isValidUrl(imageUrl)) {
     showToast('Please enter a valid image URL', 'error');
     return;
   }
@@ -106,7 +106,7 @@ async function handleFormSubmit(event) {
     const albumData = {
       title: title,
       type: type,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl || '', // Empty string if no URL provided
       releaseDate: {
         month: month,
         year: year

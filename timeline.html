@@ -24,7 +24,7 @@
     <div class="header-actions">
       <!-- Add Album Button (hidden for guests) -->
       <a href="admin.html" id="addAlbumButton" class="btn btn-primary write-control" style="display: none;">
-        + Add Album
+        + Add Album/Song
       </a>
 
       <!-- User Info (hidden for guests) -->
@@ -44,6 +44,30 @@
     <p>👁️ You're in <strong>read-only mode</strong>. Log in to add albums and comments.</p>
   </div>
 
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="🔍 Search albums or songs..."
+        autocomplete="off"
+      >
+      <button id="clearSearchBtn" class="clear-search-btn hidden" title="Clear search">✕</button>
+
+      <!-- Search Results Dropdown -->
+      <div id="searchResults" class="search-results hidden">
+        <div id="searchResultsList" class="search-results-list">
+          <!-- Results will be populated here by JavaScript -->
+        </div>
+        <div id="noResults" class="no-results hidden">
+          No albums or songs found
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Timeline Container -->
   <div class="timeline-wrapper">
     <div class="timeline-container" id="timelineContainer">
@@ -58,8 +82,8 @@
       <button class="timeline-control-btn" id="jumpToTodayBtn" title="Jump to current date">
         📍 Today
       </button>
-      <button class="timeline-control-btn" id="zoomOutBtn" title="Show more years (coming soon)" disabled>
-        🔍 Zoom
+      <button class="timeline-control-btn" id="zoomOutBtn" title="Change zoom level">
+        🔍 <span id="zoomLabel">1x</span>
       </button>
     </div>
   </div>

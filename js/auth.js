@@ -164,12 +164,25 @@ function updateUIForAuthState(user, isGuestMode) {
   const logoutButton = document.getElementById('logoutButton');
   const addAlbumButton = document.getElementById('addAlbumButton');
   const guestBanner = document.getElementById('guestBanner');
+  const timelineWrapper = document.querySelector('.timeline-wrapper');
 
   if (isGuestMode) {
     // Guest mode
     if (userInfo) userInfo.style.display = 'none';
     if (addAlbumButton) addAlbumButton.style.display = 'none';
-    if (guestBanner) guestBanner.classList.remove('hidden');
+    if (guestBanner) {
+      guestBanner.classList.remove('hidden');
+      // Adjust timeline height to account for banner (after DOM updates)
+      setTimeout(() => {
+        if (timelineWrapper) {
+          const bannerHeight = guestBanner.offsetHeight || 60;
+          // Account for search bar (72px) if it exists
+          const searchBar = document.querySelector('.search-container');
+          const searchHeight = searchBar ? (searchBar.offsetHeight || 72) : 0;
+          timelineWrapper.style.height = `calc(100vh - 80px - ${searchHeight}px - ${bannerHeight}px)`;
+        }
+      }, 10);
+    }
 
     // Hide all write controls (will be handled per page)
     hideWriteControls();
@@ -178,7 +191,15 @@ function updateUIForAuthState(user, isGuestMode) {
     if (userInfo) userInfo.style.display = 'flex';
     if (userName) userName.textContent = user.email.split('@')[0]; // Use email prefix as name
     if (addAlbumButton) addAlbumButton.style.display = 'inline-flex';
-    if (guestBanner) guestBanner.classList.add('hidden');
+    if (guestBanner) {
+      guestBanner.classList.add('hidden');
+      // Restore default timeline height (accounting for search bar)
+      if (timelineWrapper) {
+        const searchBar = document.querySelector('.search-container');
+        const searchHeight = searchBar ? (searchBar.offsetHeight || 72) : 0;
+        timelineWrapper.style.height = `calc(100vh - 80px - ${searchHeight}px)`;
+      }
+    }
 
     // Show write controls
     showWriteControls();

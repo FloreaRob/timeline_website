@@ -4,10 +4,12 @@ let albums = [];
 let isDragging = false;
 let startX = 0;
 let scrollLeft = 0;
+let searchQuery = '';
 
 // Initialize timeline when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   initTimeline();
+  initSearchBar();
 });
 
 // Initialize Timeline
@@ -112,6 +114,9 @@ function getTimelineRange() {
   const years = albums.map(a => a.releaseDate.year);
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
+
+  // Set reference year to earliest album (so all positions are positive)
+  setTimelineReferenceYear(minYear - 2);
 
   // Add padding
   return {
@@ -315,13 +320,26 @@ function centerTimeline() {
 
   // Center on current position
   const containerWidth = container.offsetWidth;
-  container.scrollLeft = currentPosition - (containerWidth / 2);
+  const targetScroll = currentPosition - (containerWidth / 2);
+
+  // Safari-compatible scroll (fallback for smooth behavior)
+  if ('scrollBehavior' in document.documentElement.style) {
+    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  } else {
+    container.scrollLeft = targetScroll;
+  }
 }
 
 // Initialize Timeline Interactions
 function initTimelineInteractions() {
   const container = document.getElementById('timelineContainer');
   const jumpToTodayBtn = document.getElementById('jumpToTodayBtn');
+  const zoomBtn = document.getElementById('zoomOutBtn');
+  const zoomLabel = document.getElementById('zoomLabel');
+
+  // Zoom levels: 0.5x (zoomed out), 1x (default), 2x (zoomed in)
+  const zoomLevels = [0.1, 0.5, 1];
+  let currentZoomIndex = 1; // Start at 1x
 
   // Horizontal scroll with mouse wheel
   container.addEventListener('wheel', (e) => {
@@ -366,6 +384,32 @@ function initTimelineInteractions() {
     jumpToTodayBtn.addEventListener('click', centerTimeline);
   }
 
+  // Zoom button - cycle through zoom levels
+  if (zoomBtn) {
+    zoomBtn.addEventListener('click', () => {
+      // Save current scroll position (as percentage)
+      const scrollPercentage = container.scrollLeft / container.scrollWidth;
+
+      // Cycle to next zoom level
+      currentZoomIndex = (currentZoomIndex + 1) % zoomLevels.length;
+      const newZoom = zoomLevels[currentZoomIndex];
+
+      // Update zoom in utils
+      setTimelineZoom(newZoom);
+
+      // Update zoom label, update for 0.01 zoom level
+      zoomLabel.textContent = newZoom === 0.1 ? '0.1x' : (newZoom === 0.5 ? '0.5x' : (newZoom === 1 ? '1x' : '2x'));
+
+      // Re-render timeline with new zoom
+      renderTimeline();
+
+      // Restore scroll position (approximately)
+      setTimeout(() => {
+        container.scrollLeft = scrollPercentage * container.scrollWidth;
+      }, 50);
+    });
+  }
+
   // Touch support for mobile
   let touchStartX = 0;
   let touchScrollLeft = 0;
@@ -380,4 +424,206 @@ function initTimelineInteractions() {
     const walk = (touchStartX - x) * 2;
     container.scrollLeft = touchScrollLeft + walk;
   });
+}
+
+// Initialize Search Bar
+function initSearchBar() {
+  const searchInput = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  const searchResults = document.getElementById('searchResults');
+  const searchResultsList = document.getElementById('searchResultsList');
+  const noResults = document.getElementById('noResults');
+
+  if (!searchInput) return;
+
+  // Search input handler (with debounce for performance)
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchQuery = e.target.value.toLowerCase().trim();
+
+      // Show/hide clear button
+      if (searchQuery) {
+        clearSearchBtn.classList.remove('hidden');
+        showSearchResults();
+      } else {
+        clearSearchBtn.classList.add('hidden');
+        hideSearchResults();
+      }
+
+      // Also dim albums on timeline (subtle secondary effect)
+      filterAlbums();
+    }, 200); // Debounce 200ms
+  });
+
+  // Clear search button
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      hideSearchResults();
+      filterAlbums();
+      searchInput.focus();
+    });
+  }
+
+  // ESC key to clear search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      hideSearchResults();
+      filterAlbums();
+    }
+  });
+
+  // Focus event - show results if there's a query
+  searchInput.addEventListener('focus', () => {
+    if (searchQuery) {
+      showSearchResults();
+    }
+  });
+
+  // Click outside to close dropdown
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrapper')) {
+      hideSearchResults();
+    }
+  });
+
+  // Helper functions
+  function showSearchResults() {
+    const matchingAlbums = albums.filter(album => albumMatchesSearch(album));
+
+    if (matchingAlbums.length === 0) {
+      // Show "no results" message
+      searchResultsList.innerHTML = '';
+      noResults.classList.remove('hidden');
+      searchResults.classList.remove('hidden');
+    } else {
+      // Show results
+      noResults.classList.add('hidden');
+      searchResultsList.innerHTML = '';
+
+      matchingAlbums.forEach(album => {
+        const resultItem = createSearchResultItem(album);
+        searchResultsList.appendChild(resultItem);
+      });
+
+      searchResults.classList.remove('hidden');
+    }
+  }
+
+  function hideSearchResults() {
+    searchResults.classList.add('hidden');
+  }
+
+  function createSearchResultItem(album) {
+    const item = document.createElement('div');
+    item.className = 'search-result-item';
+    item.dataset.albumId = album.id;
+
+    // Image
+    let imageHTML;
+    if (album.imageUrl) {
+      imageHTML = `<img src="${album.imageUrl}" alt="${sanitizeHTML(album.title)}" class="search-result-image">`;
+    } else {
+      imageHTML = `<div class="search-result-image no-image">🎵</div>`;
+    }
+
+    // Info
+    const typeLabel = album.type === 'album' ? 'Album' : 'Song';
+    const dateStr = formatDate(album.releaseDate.month, album.releaseDate.year);
+
+    item.innerHTML = `
+      ${imageHTML}
+      <div class="search-result-info">
+        <div class="search-result-title">${sanitizeHTML(album.title)}</div>
+        <div class="search-result-meta">
+          <span class="search-result-badge">${typeLabel}</span>
+          <span>${dateStr}</span>
+        </div>
+      </div>
+    `;
+
+    // Click handler - navigate to album page
+    item.addEventListener('click', () => {
+      navigateToAlbum(album.id);
+    });
+
+    return item;
+  }
+}
+
+// Filter albums based on search query
+function filterAlbums() {
+  if (!searchQuery) {
+    // No search query - show all albums
+    document.querySelectorAll('.album-marker, .album-marker-group').forEach(marker => {
+      marker.classList.remove('filtered-out');
+    });
+    return;
+  }
+
+  // Filter albums
+  const timelineCanvas = document.getElementById('timelineCanvas');
+  const albumMarkers = timelineCanvas.querySelectorAll('.album-marker');
+  const albumGroups = timelineCanvas.querySelectorAll('.album-marker-group');
+
+  // Check individual markers
+  albumMarkers.forEach(marker => {
+    // Skip markers inside groups (they'll be handled by group logic)
+    if (marker.closest('.album-marker-group')) return;
+
+    const albumId = marker.dataset.albumId;
+    const album = albums.find(a => a.id === albumId);
+
+    if (album && albumMatchesSearch(album)) {
+      marker.classList.remove('filtered-out');
+    } else {
+      marker.classList.add('filtered-out');
+    }
+  });
+
+  // Check groups
+  albumGroups.forEach(group => {
+    const markersInGroup = group.querySelectorAll('.album-marker');
+    let hasMatch = false;
+
+    markersInGroup.forEach(marker => {
+      const albumId = marker.dataset.albumId;
+      const album = albums.find(a => a.id === albumId);
+
+      if (album && albumMatchesSearch(album)) {
+        hasMatch = true;
+        marker.classList.remove('filtered-out');
+      } else {
+        marker.classList.add('filtered-out');
+      }
+    });
+
+    // If no albums in group match, dim the entire group
+    if (!hasMatch) {
+      group.classList.add('filtered-out');
+    } else {
+      group.classList.remove('filtered-out');
+    }
+  });
+}
+
+// Check if album matches search query
+function albumMatchesSearch(album) {
+  if (!searchQuery) return true;
+
+  const searchableText = [
+    album.title,
+    album.type,
+    formatDate(album.releaseDate.month, album.releaseDate.year),
+    album.releaseDate.year.toString()
+  ].join(' ').toLowerCase();
+
+  return searchableText.includes(searchQuery);
 }

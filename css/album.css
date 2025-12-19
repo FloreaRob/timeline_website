@@ -46,6 +46,24 @@
   box-shadow: var(--shadow-xl);
 }
 
+/* Default icon for albums without images */
+.album-cover-large.no-image {
+  width: var(--album-cover-size);
+  height: var(--album-cover-size);
+  background: linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.album-cover-large .default-icon {
+  font-size: 120px;
+  line-height: 1;
+  user-select: none;
+}
+
 .type-badge {
   position: absolute;
   top: var(--space-md);

@@ -62,7 +62,27 @@ async function initAlbumPage() {
 
 // Render Album Header
 function renderAlbumHeader() {
-  document.getElementById('albumCover').src = currentAlbum.imageUrl || '';
+  const albumCover = document.getElementById('albumCover');
+  const albumCoverLarge = albumCover.parentElement;
+
+  // Handle image - show default icon if no image URL
+  if (currentAlbum.imageUrl && currentAlbum.imageUrl.trim()) {
+    albumCover.src = currentAlbum.imageUrl;
+    albumCover.style.display = 'block';
+    albumCoverLarge.classList.remove('no-image');
+  } else {
+    // No image - show default music note icon
+    albumCover.style.display = 'none';
+    albumCoverLarge.classList.add('no-image');
+    // Add music note emoji if not already there
+    if (!albumCoverLarge.querySelector('.default-icon')) {
+      const defaultIcon = document.createElement('div');
+      defaultIcon.className = 'default-icon';
+      defaultIcon.textContent = '🎵';
+      albumCoverLarge.insertBefore(defaultIcon, albumCoverLarge.firstChild);
+    }
+  }
+
   document.getElementById('albumTitle').textContent = currentAlbum.title;
   document.getElementById('albumDate').textContent = formatDate(
     currentAlbum.releaseDate.month,
@@ -201,13 +221,24 @@ function renderOtherComments() {
   const otherCommentsEl = document.getElementById('otherComments');
   const noCommentsEl = document.getElementById('noComments');
 
-  if (allComments.length === 0) {
+  // Check if there are ANY comments (including current user's)
+  const totalComments = allComments.length + (currentUserComment ? 1 : 0);
+
+  if (totalComments === 0) {
+    // No comments at all - show "no comments" message
     otherCommentsEl.innerHTML = '';
     noCommentsEl.classList.remove('hidden');
     return;
   }
 
+  // There are comments - hide "no comments" message
   noCommentsEl.classList.add('hidden');
+
+  // If there are no OTHER users' comments, don't show that section
+  if (allComments.length === 0) {
+    otherCommentsEl.innerHTML = '';
+    return;
+  }
 
   otherCommentsEl.innerHTML = allComments.map(comment => `
     <div class="comment-card">

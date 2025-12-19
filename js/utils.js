@@ -20,14 +20,21 @@ function formatDateShort(month, year) {
   return `${monthNamesShort[month - 1]} ${year}`;
 }
 
-// Calculate timeline position based on date
-// Reference date: January 2000 = position 0
-function calculateTimelinePosition(month, year) {
-  const referenceYear = 2000;
-  const yearWidth = 1200; // pixels per year (from CSS variables)
-  const monthWidth = 100; // pixels per month (yearWidth / 12)
+// Global variable for timeline reference year (set dynamically based on earliest album)
+let timelineReferenceYear = 2000;
+let timelineZoomLevel = 1; // 1 = default (1200px/year), 0.5 = zoomed out (600px/year), 2 = zoomed in
 
-  const yearOffset = (year - referenceYear) * yearWidth;
+// Set timeline reference year (call this before rendering timeline)
+function setTimelineReferenceYear(year) {
+  timelineReferenceYear = year;
+}
+
+// Calculate timeline position based on date
+function calculateTimelinePosition(month, year) {
+  const yearWidth = 1200 * timelineZoomLevel; // pixels per year (adjustable by zoom)
+  const monthWidth = yearWidth / 12; // pixels per month
+
+  const yearOffset = (year - timelineReferenceYear) * yearWidth;
   const monthOffset = (month - 1) * monthWidth;
 
   return yearOffset + monthOffset;
@@ -35,14 +42,23 @@ function calculateTimelinePosition(month, year) {
 
 // Get date from timeline position
 function getDateFromPosition(position) {
-  const referenceYear = 2000;
-  const yearWidth = 1200;
-  const monthWidth = 100;
+  const yearWidth = 1200 * timelineZoomLevel;
+  const monthWidth = yearWidth / 12;
 
-  const year = Math.floor(position / yearWidth) + referenceYear;
+  const year = Math.floor(position / yearWidth) + timelineReferenceYear;
   const month = Math.floor((position % yearWidth) / monthWidth) + 1;
 
   return { month, year };
+}
+
+// Set zoom level for timeline
+function setTimelineZoom(zoomLevel) {
+  timelineZoomLevel = zoomLevel;
+}
+
+// Get current zoom level
+function getTimelineZoom() {
+  return timelineZoomLevel;
 }
 
 // Debounce function (limits function calls)
@@ -210,13 +226,43 @@ function getURLParameter(name) {
   return urlParams.get(name);
 }
 
-// Smooth scroll to element
+// Smooth scroll to element (Safari-compatible)
 function smoothScrollTo(element, offset = 0) {
   const targetPosition = element.offsetLeft - offset;
-  element.parentElement.scrollTo({
-    left: targetPosition,
-    behavior: 'smooth'
-  });
+  const container = element.parentElement;
+
+  // Safari-compatible smooth scroll
+  if ('scrollBehavior' in document.documentElement.style) {
+    container.scrollTo({
+      left: targetPosition,
+      behavior: 'smooth'
+    });
+  } else {
+    // Fallback for Safari: manual smooth scroll
+    const start = container.scrollLeft;
+    const distance = targetPosition - start;
+    const duration = 500;
+    let startTime = null;
+
+    function animation(currentTime) {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+
+      // Easing function (ease-in-out)
+      const ease = progress < 0.5
+        ? 2 * progress * progress
+        : -1 + (4 - 2 * progress) * progress;
+
+      container.scrollLeft = start + (distance * ease);
+
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation);
+      }
+    }
+
+    requestAnimationFrame(animation);
+  }
 }
 
 // Check if element is in viewport
